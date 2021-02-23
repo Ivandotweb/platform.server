@@ -16,6 +16,7 @@ module.exports.join = async function (req, res) {
     const user = new User({
       email: req.body.email,
       password,
+      name: req.body.name,
     })
 
     try {
@@ -56,3 +57,5 @@ module.exports.login = async function (req, res) {
     res.status(404).json({ message: 'Пользователь не найден ' })
   }
 }
+
+module.exports.auth = function (req, res) {}
