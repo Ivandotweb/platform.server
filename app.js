@@ -1,30 +1,31 @@
 const express = require('express')
 const mongoose = require('mongoose')
-const cookieParser = require('cookie-parser')
-const cors = require('cors')
-const morgan = require('morgan')
-const bodyParser = require('body-parser')
 const passport = require('passport')
+const bodyParser = require('body-parser')
 
-const app = express()
+const helmet = require('helmet')
+
+const userRoute = require('./routes/user')
+const profileRoute = require('./routes/profile')
+
 const keys = require('./config/keys')
 
-//Routes
-const userRoute = require('./routes/user.js')
-app.use('/api/user/', userRoute)
+const app = express()
 
 mongoose.connect(keys.MONGO_URI, {
-  useCreateIndex: true,
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  useCreateIndex: true,
 })
 
+app.use(helmet())
+
 app.use(passport.initialize())
+app.use(passport.session())
 require('./middleware/passport')(passport)
 
-app.use(morgan('dev'))
-app.use(cookieParser())
-app.use(cors())
+app.use(require('morgan')('dev'))
+app.use(require('cors')())
 app.use(
   bodyParser.urlencoded({
     extended: true,
@@ -32,6 +33,7 @@ app.use(
 )
 app.use(bodyParser.json())
 
-app.listen(3001, () => {
-  console.log(`Server is running at port 3001`)
-})
+app.use('/api/user/', userRoute)
+app.use('/api/profile/', profileRoute)
+
+app.listen(3001, () => console.log(`Server has been started on 3001`))

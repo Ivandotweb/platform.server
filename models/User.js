@@ -1,14 +1,11 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
+const ROLES = require('../utils/roles')
 
 const userSchema = new Schema({
   name: {
     type: String,
     required: true,
-  },
-  profilePic: {
-    type: String,
-    default: '',
   },
   email: {
     type: String,
@@ -18,6 +15,10 @@ const userSchema = new Schema({
   password: {
     type: String,
     required: true,
+  },
+  role: {
+    type: String,
+    default: ROLES.student,
   },
 })
 

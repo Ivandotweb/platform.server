@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const ROLES = require('../utils/roles')
 
 const User = require('../models/User')
 const keys = require('../config/keys')
@@ -17,6 +18,7 @@ module.exports.join = async function (req, res) {
       email: req.body.email,
       password,
       name: req.body.name,
+      role: ROLES.student,
     })
 
     try {
@@ -35,11 +37,11 @@ module.exports.login = async function (req, res) {
     const password = bcrypt.compareSync(req.body.password, candidate.password)
 
     if (password) {
-      //token
       const token = jwt.sign(
         {
           email: candidate.email,
           userId: candidate._id,
+          role: candidate.role,
         },
         keys.jwt,
         {
@@ -49,13 +51,25 @@ module.exports.login = async function (req, res) {
 
       res.status(200).json({
         token: `Bearer ${token}`,
+        role: candidate.role,
       })
     } else {
       res.status(401).json({ message: 'Пароль не верный' })
     }
   } else {
-    res.status(404).json({ message: 'Пользователь не найден ' })
+    res.status(404).json({ message: 'Пользователь не найден' })
   }
 }
 
-module.exports.auth = function (req, res) {}
+module.exports.auth = function (req, res) {
+  try {
+    const token = req.headers.authorization.split(' ')
+    const role = jwt.verify(token[1], keys.jwt).role
+    const userRole = req.body.role
+
+    if (role != userRole) res.status(401).json({ message: 'Access denied' })
+    else res.status(200).json({ message: role })
+  } catch (e) {
+    errorHandler(e)
+  }
+}
