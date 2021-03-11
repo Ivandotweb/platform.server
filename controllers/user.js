@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken')
 const ROLES = require('../utils/roles')
 
 const User = require('../models/User')
+const Profile = require('../models/Profile')
+
 const keys = require('../config/keys')
 const errorHandler = require('../utils/errorHandler')
 
@@ -18,11 +20,20 @@ module.exports.join = async function (req, res) {
       email: req.body.email,
       password,
       name: req.body.name,
-      role: ROLES.student,
+      role: ROLES.teacher,
     })
 
     try {
-      await user.save()
+      await user.save(async (err, usr) => {
+        const profile = new Profile({
+          email: req.body.email,
+          name: req.body.name,
+          registerDate: Date.now(),
+          id: usr._id,
+        })
+
+        await profile.save()
+      })
       res.status(201).json({ message: 'Пользователь создан' })
     } catch (e) {
       errorHandler(res, e)
@@ -34,6 +45,8 @@ module.exports.login = async function (req, res) {
   const candidate = await User.findOne({ email: req.body.email })
 
   if (candidate) {
+    console.log(req.body.password)
+
     const password = bcrypt.compareSync(req.body.password, candidate.password)
 
     if (password) {
