@@ -20,7 +20,7 @@ module.exports.join = async function (req, res) {
       email: req.body.email,
       password,
       name: req.body.name,
-      role: ROLES.teacher,
+      role: ROLES.student,
     })
 
     try {
@@ -45,12 +45,10 @@ module.exports.login = async function (req, res) {
   const candidate = await User.findOne({ email: req.body.email })
 
   if (candidate) {
-    console.log(req.body.password)
-
     const password = bcrypt.compareSync(req.body.password, candidate.password)
 
     if (password) {
-      const token = jwt.sign(
+      const access_token = jwt.sign(
         {
           email: candidate.email,
           userId: candidate._id,
@@ -58,12 +56,12 @@ module.exports.login = async function (req, res) {
         },
         keys.jwt,
         {
-          expiresIn: 60 * 60 * 2, // 2 hours
+          expiresIn: 60 * 30, // 30 minutes
         }
       )
 
       res.status(200).json({
-        token: `Bearer ${token}`,
+        token: `Bearer ${access_token}`,
         role: candidate.role,
       })
     } else {
